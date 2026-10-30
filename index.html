@@ -23,6 +23,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="m20.js"></script>
   <script src="walk.js"></script>
+  <script src="clock.js"></script>
   <script>
     // Mars tiles use plain lat/lon, not the Web Mercator projection Earth maps use.
     const map = L.map('map', { crs: L.CRS.EPSG4326, minZoom: 1, maxZoom: 18 })
@@ -96,6 +97,22 @@
     map.on('baselayerchange', e => {
       document.getElementById('layer-colors').textContent = LAYER_COLORS[e.name];
     });
+
+    const clockBox = L.control({ position: 'topleft' });
+    clockBox.onAdd = () => L.DomUtil.create('div', 'walk-info');
+    clockBox.addTo(map);
+
+    function showMarsTime() {
+      const now = marsClock(new Date());
+      const elevation = Math.round(Math.abs(now.sunElevation));
+      clockBox.getContainer().innerHTML = `
+        <h2>Mars clock at Jezero</h2>
+        Sol ${now.sol}, ${formatHours(now.meanHours)}<br>
+        Sun: ${now.sunElevation > 0 ? `up, ${elevation}&deg; above` : `down, ${elevation}&deg; below`} the horizon<br>
+        <small>Ignores crater walls and dust.</small>`;
+    }
+    showMarsTime();
+    setInterval(showMarsTime, 1000);
   </script>
 </body>
 </html>
