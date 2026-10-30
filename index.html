@@ -15,7 +15,8 @@
     .walk-info .steep { color: #d40000; font-weight: bold; }
     .walk-info h3 { margin: 8px 0 2px; font-size: 13px; }
     .walk-info .line { display: inline-block; width: 18px; height: 4px; margin-right: 6px; vertical-align: middle; }
-    #layer-colors { display: block; max-width: 240px; }
+    .walk-info { max-width: 250px; }
+    .walk-info small { display: block; }
   </style>
 </head>
 <body>
@@ -23,6 +24,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="m20.js"></script>
   <script src="walk.js"></script>
+  <script src="terrain.js"></script>
   <script src="clock.js"></script>
   <script>
     // Mars tiles use plain lat/lon, not the Web Mercator projection Earth maps use.
@@ -33,6 +35,7 @@
     const ctx = L.tileLayer('https://astro.arcgis.com/arcgis/rest/services/OnMars/CTX1/MapServer/tile/{z}/{y}/{x}', {
       tileSize: 512,
       zoomOffset: -1,
+      maxNativeZoom: 13, // the service lists deeper levels, but they return errors
       attribution: 'CTX: NASA/JPL/MSSS/The Murray Lab, hosted by Esri'
     }).addTo(map);
 
@@ -47,6 +50,20 @@
       attribution: 'THEMIS: NASA/JPL/ASU, via NASA Mars Trek'
     });
 
+    // Its own pane keeps the photo above the map layers but under the route lines.
+    map.createPane('hirise').style.zIndex = 350;
+    const hirise = L.imageOverlay(TERRAIN.hiriseWalk.url, TERRAIN.hiriseWalk.bounds, {
+      pane: 'hirise',
+      attribution: 'HiRISE: NASA/JPL/University of Arizona'
+    }).addTo(map);
+
+    // Above the photos, under the route lines. HiRISE detail near the walk, CTX for the wider area.
+    map.createPane('slopes').style.zIndex = 360;
+    const slopeMap = L.layerGroup([
+      L.imageOverlay(TERRAIN.slopeCtx.url, TERRAIN.slopeCtx.bounds, { pane: 'slopes' }),
+      L.imageOverlay(TERRAIN.slopeHirise.url, TERRAIN.slopeHirise.bounds, { pane: 'slopes' })
+    ]).addTo(map);
+
     // Leaflet wants [lat, lon]; the rover data stores lon first.
     const roverPath = L.polyline(M20.map(([lon, lat]) => [lat, lon]), {
       color: '#ff7a00',
@@ -59,14 +76,19 @@
     const stats = walkStats(walkStops);
     const walkRoute = L.layerGroup([
       L.polyline(walkStops.map(toLatLon), { color: '#00c8ff', weight: 6 }),
-      L.polyline(stats.steepParts.map(part => part.map(toLatLon)), { color: '#ff0000', weight: 6 })
+      L.polyline(TERRAIN.walkSlopes.steepParts, { color: '#ff0000', weight: 6 })
     ]).addTo(map);
 
     L.control.layers({
       'CTX photos': ctx,
       'MOLA height colors': mola,
       'THEMIS infrared': themis
-    }, { 'Perseverance path': roverPath, 'Marswalk route': walkRoute }, { collapsed: false }).addTo(map);
+    }, {
+      'HiRISE sharp photo': hirise,
+      'Slope map': slopeMap,
+      'Perseverance path': roverPath,
+      'Marswalk route': walkRoute
+    }, { collapsed: false }).addTo(map);
 
     const LAYER_COLORS = {
       'CTX photos': 'Map: a black-and-white photo of the ground.',
@@ -83,13 +105,16 @@
         Highest point: ${Math.round(stats.highestM)} m<br>
         Lowest point: ${Math.round(stats.lowestM)} m<br>
         Total climb: ${Math.round(stats.climbM)} m<br>
-        <span class="steep">Steep parts: ${Math.round(stats.steepM)} m</span><br>
+        <span class="steep">Steep parts: ${TERRAIN.walkSlopes.steepMeters} m (${TERRAIN.walkSlopes.steepPercent}% of walk)</span><br>
+        Steepest point: ${TERRAIN.walkSlopes.steepestDegrees}&deg;<br>
         <small>Heights are relative to Mars's average level.</small>
         <h3>Color guide</h3>
         <span class="line" style="background: #ff7a00"></span>Rover's full path<br>
         <span class="line" style="background: #00c8ff"></span>Marswalk route<br>
-        <span class="line" style="background: #ff0000"></span>Steep: ${STEEP_DEGREES}&deg; or more between stops<br>
-        <small id="layer-colors">${LAYER_COLORS['CTX photos']}</small>`;
+        <span class="line" style="background: #ff0000"></span>Steep: ${TERRAIN.walkSlopes.steepDegrees}&deg; or more (HiRISE)<br>
+        ${TERRAIN.slopeBands.map(([from, to, color]) => `<span class="line" style="height: 10px; background: rgb(${color})"></span>Ground ${to ? `${from}-${to}` : `${from}+`}&deg;<br>`).join('')}
+        <small id="layer-colors">${LAYER_COLORS['CTX photos']}</small>
+        <small>Sharp patch around the walk: HiRISE photo. Untick it to see the layer underneath.</small>`;
       return box;
     };
     walkInfo.addTo(map);
