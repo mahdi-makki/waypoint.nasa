@@ -10,11 +10,11 @@ from rasterio.warp import transform
 from terrain_shifts import HEIGHT_FILES
 
 HERE = Path(__file__).parent
-FIRST_STOP, LAST_STOP = 154, 260  # same walk as walk.js
+FIRST_STOP, LAST_STOP = 154, 260  # same walk as lib/walk.js
 
 stops = np.array([
     [float(n) for n in row]
-    for row in re.findall(r'\[([\d.]+),([\d.]+),(-?[\d.]+),\d+,\d+\]', (HERE / 'm20.js').read_text())
+    for row in re.findall(r'\[([\d.]+),([\d.]+),(-?[\d.]+),\d+,\d+\]', (HERE / 'lib' / 'm20.js').read_text())
 ])
 walk = stops[FIRST_STOP:LAST_STOP + 1]
 

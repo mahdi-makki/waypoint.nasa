@@ -2,6 +2,8 @@
 
 A web page that shows a map of Jezero Crater with layers, a walking route, safety info, rover photos and a 3D view of the walk area.
 
+**Run it:** `npm install`, then `npm run dev`, then open http://localhost:3000. Tests: `npm test`.
+
 **Status:** all 8 core features and all 11 build steps are complete. Of the 4 extra features, 1 is partly done and 3 are not started.
 
 ## What's in it
@@ -31,7 +33,7 @@ A web page that shows a map of Jezero Crater with layers, a walking route, safet
 | THEMIS | Heat/infrared layer | Mars Trek map tiles |
 | Perseverance route | Path, heights, science stops | NASA Mars 2020 route file |
 | Perseverance photos | Photos at science stops | NASA raw images feed |
-| NASA reports and sample table | What the rover did at each stop | NASA / JPL (links in `science.js`) |
+| NASA reports and sample table | What the rover did at each stop | NASA / JPL (links in `lib/science.js`) |
 
 **Coverage checked:** the walk (rover stops 154–260, about 4 km up the delta front) is inside HiRISE height data `DTEEC_045994_1985_046060_1985_U01`. Several CTX height datasets also cover it.
 
@@ -83,7 +85,7 @@ Build these after steps 7 and 9–11. The challenge says existing tools are too 
 5. **Coverage:** slope colors stop about 2 km from the rover's path.
 6. **Sun angle:** it's an estimate that ignores crater walls and dust.
 7. **Round hole at stop 4:** what made it is still unconfirmed.
-8. **3D view:** the stops can't be clicked, and it needs internet (so does the map).
+8. **3D view:** the stops can't be clicked. The map needs internet for its tiles; the 3D view does not.
 9. **Stop dates:** NASA's records were matched to the stops by sol, not by map position.
 
 ## Check before presenting

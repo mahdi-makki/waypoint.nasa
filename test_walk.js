@@ -1,10 +1,9 @@
 // Run with: node test_walk.js
-const assert = require('assert');
-const fs = require('fs');
-const vm = require('vm');
-
-vm.runInThisContext(fs.readFileSync(__dirname + '/m20.js', 'utf8'));
-vm.runInThisContext(fs.readFileSync(__dirname + '/walk.js', 'utf8'));
+import assert from 'assert';
+import { M20 } from './lib/m20.js';
+import { STOP_PHOTOS } from './lib/photos.js';
+import { SOURCES, STOP_SCIENCE } from './lib/science.js';
+import { WALK_FIRST_STOP, WALK_LAST_STOP, scienceStops, walkStats } from './lib/walk.js';
 
 // 0.01 degrees of latitude on Mars is about 591.6 m.
 const made = walkStats([
@@ -37,7 +36,6 @@ const realStays = scienceStops(M20.slice(WALK_FIRST_STOP, WALK_LAST_STOP + 1));
 assert.deepStrictEqual(realStays.map(s => s.fromSol), [477, 502, 565, 609], 'real long stays');
 
 // Every science stop needs photos taken during its own stay.
-vm.runInThisContext(fs.readFileSync(__dirname + '/photos.js', 'utf8'));
 assert.strictEqual(STOP_PHOTOS.length, realStays.length, 'photos for each stop');
 STOP_PHOTOS.forEach((photos, i) => {
   assert(photos.length >= 1 && photos.length <= 3, `stop ${i + 1} has 1-3 photos`);
@@ -47,7 +45,6 @@ STOP_PHOTOS.forEach((photos, i) => {
 });
 
 // Every science stop needs a description, and every source it names must exist.
-vm.runInThisContext(fs.readFileSync(__dirname + '/science.js', 'utf8'));
 assert.strictEqual(STOP_SCIENCE.length, realStays.length, 'science for each stop');
 for (const { place, did, why, sources } of STOP_SCIENCE) {
   assert(place && did && why, 'science text filled in');

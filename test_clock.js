@@ -1,9 +1,6 @@
 // Run with: node test_clock.js
-const assert = require('assert');
-const fs = require('fs');
-const vm = require('vm');
-
-vm.runInThisContext(fs.readFileSync(__dirname + '/clock.js', 'utf8'));
+import assert from 'assert';
+import { formatHours, marsClock } from './lib/clock.js';
 
 // Real timestamp from NASA's Perseverance photo feed: 2026-10-30T09:06:20.570 UTC = Sol 2024, 12:55:51.
 const photo = marsClock(new Date('2026-10-30T09:06:20.570Z'));

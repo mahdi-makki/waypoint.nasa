@@ -1,4 +1,4 @@
-# Turns the downloaded terrain files into images the web map can show, and writes terrain.js.
+# Turns the downloaded terrain files into images the web map can show, and writes lib/terrain.js.
 # Run with: .venv\Scripts\python build_terrain.py
 import base64
 import io
@@ -34,8 +34,8 @@ SLOPE_BANDS = [
 ]
 SLOPE_OPACITY = 170  # out of 255
 WALK_SAMPLE_M = 5
-STEEP_DEGREES = 10  # same as walk.js
-SCIENCE_STAY_SOLS = 15  # same as walk.js
+STEEP_DEGREES = 10  # same as lib/walk.js
+SCIENCE_STAY_SOLS = 15  # same as lib/walk.js
 VIEW_MARGIN_M = 300  # how much ground the 3D view shows around the walk
 VIEW_PIXEL = 4  # meters between 3D height points
 NO_HEIGHT = -32768  # marks a missing height in the 3D data
@@ -43,7 +43,7 @@ MAX_REAL_HEIGHT_M = 30000  # higher than anything on Mars, Olympus Mons included
 
 stops = np.array([
     [float(n) for n in row]
-    for row in re.findall(r'\[([\d.]+),([\d.]+),(-?[\d.]+),(\d+),\d+\]', (HERE / 'm20.js').read_text())
+    for row in re.findall(r'\[([\d.]+),([\d.]+),(-?[\d.]+),(\d+),\d+\]', (HERE / 'lib' / 'm20.js').read_text())
 ])
 walk = stops[FIRST_STOP:LAST_STOP + 1]
 HIRISE_SHIFT = HEIGHT_FILES['hirise_dtm.tif']
@@ -165,7 +165,7 @@ def build_3d_view():
     assert np.isfinite(path_heights).all(), 'height data has gaps on the walk'
 
     stayed = np.flatnonzero(np.diff(walk[:, 3]) >= SCIENCE_STAY_SOLS)
-    assert len(stayed) == 4, 'expected the same 4 science stops as walk.js'
+    assert len(stayed) == 4, 'expected the same 4 science stops as lib/walk.js'
 
     with rasterio.open(HERE / 'data' / 'hirise_ortho.tif') as src:
         photo_window = from_bounds(*area, src.transform)
@@ -189,9 +189,9 @@ def build_3d_view():
         'route': to_scene(path_rows, path_cols),
         'stops': to_scene(stop_rows[stayed], stop_cols[stayed]),
     }
-    (HERE / 'terrain3d.js').write_text(
-        '// Made by build_terrain.py. Do not edit by hand.\nconst VIEW_3D = ' + json.dumps(view) + ';\n')
-    size = (HERE / 'terrain3d.js').stat().st_size / 1e6
+    (HERE / 'lib' / 'terrain3d.js').write_text(
+        '// Made by build_terrain.py. Do not edit by hand.\nexport const VIEW_3D = ' + json.dumps(view) + ';\n')
+    size = (HERE / 'lib' / 'terrain3d.js').stat().st_size / 1e6
     print(f'terrain3d.js: {heights.shape[1]}x{heights.shape[0]} height points, {size:.1f} MB, '
           f'grid vs rover: median {np.median(diff):.1f} m, scatter {diff.std():.2f} m')
 
@@ -204,7 +204,7 @@ def build_photo():
         grey = grey_photo(pixels, has_data)
         alpha = np.where(has_data, 255, 0).astype('uint8')
         Image.merge('LA', (Image.fromarray(grey), Image.fromarray(alpha))).save(
-            HERE / 'hirise_walk.webp', quality=75, method=6)
+            HERE / 'public' / 'hirise_walk.webp', quality=75, method=6)
         print(f'hirise_walk.webp: {grey.shape[1]}x{grey.shape[0]} px, {has_data.mean():.0%} has data')
         return map_bounds(src, window, HIRISE_SHIFT)
 
@@ -215,7 +215,7 @@ def build_hirise_slopes():
         heights = read_heights(src, window, HIRISE_SLOPE_PIXEL)
         pixel_m = src.res[0] * window.width / heights.shape[1]
         slope = slope_degrees(heights, pixel_m)
-        slope_image(slope).save(HERE / 'slope_hirise.png', optimize=True)
+        slope_image(slope).save(HERE / 'public' / 'slope_hirise.png', optimize=True)
         grid = window_transform(window, src.transform) * rasterio.Affine.scale(
             window.width / heights.shape[1], window.height / heights.shape[0])
 
@@ -259,7 +259,7 @@ def build_ctx_slopes(hirise_grid, hirise_has_data):
         covered[inside] = hirise_has_data[hirise_rows[inside], hirise_cols[inside]]
         slope[covered] = np.nan
 
-        slope_image(slope).save(HERE / 'slope_ctx.png', optimize=True)
+        slope_image(slope).save(HERE / 'public' / 'slope_ctx.png', optimize=True)
         print(f'slope_ctx.png: {src.res[0]:.1f} m/px, {slope.shape[1]}x{slope.shape[0]} px')
         return map_bounds(src, window, CTX_SHIFT)
 
@@ -275,6 +275,6 @@ if __name__ == '__main__':
         'slopeBands': SLOPE_BANDS,
         'walkSlopes': walk_stats,
     }
-    (HERE / 'terrain.js').write_text(
-        '// Made by build_terrain.py. Do not edit by hand.\nconst TERRAIN = ' + json.dumps(terrain, indent=2) + ';\n')
+    (HERE / 'lib' / 'terrain.js').write_text(
+        '// Made by build_terrain.py. Do not edit by hand.\nexport const TERRAIN = ' + json.dumps(terrain, indent=2) + ';\n')
     build_3d_view()

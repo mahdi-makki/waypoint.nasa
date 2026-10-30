@@ -1,0 +1,28 @@
+html, body, #map { height: 100%; margin: 0; }
+body { background: #111; overflow: hidden; }
+#map { background: #111; }
+canvas { display: block; }
+
+.walk-info { background: #fff; color: #222; padding: 8px 12px; border-radius: 5px; font: 13px/1.5 sans-serif; }
+.walk-info h2 { margin: 0 0 4px; font-size: 14px; }
+.walk-info small { color: #555; }
+.walk-info .steep { color: #d40000; font-weight: bold; }
+.walk-info h3 { margin: 8px 0 2px; font-size: 13px; }
+.walk-info .line { display: inline-block; width: 18px; height: 4px; margin-right: 6px; vertical-align: middle; }
+.walk-info .dot { display: inline-block; width: 10px; height: 10px; margin: 0 9px 0 3px; border: 1px solid #000; border-radius: 50%; background: #ffe600; vertical-align: middle; }
+.walk-info { max-width: 250px; }
+.walk-info small { display: block; }
+.stop-science { margin-top: 6px; }
+.stop-sources { margin-top: 4px; font-size: 11px; }
+.stop-photos { display: flex; gap: 6px; margin-top: 8px; }
+.stop-photos figure { margin: 0; width: 120px; }
+.stop-photos img { display: block; width: 100%; height: 90px; object-fit: cover; }
+.stop-photos figcaption { font-size: 11px; line-height: 1.3; color: #555; }
+
+.panel { position: absolute; top: 10px; left: 10px; max-width: 250px; background: #fff; color: #222; padding: 8px 12px; border-radius: 5px; font: 13px/1.5 sans-serif; }
+.panel h1 { margin: 0 0 4px; font-size: 14px; }
+.panel small { display: block; color: #555; }
+.panel label { display: block; margin-top: 6px; }
+.panel input { width: 100%; }
+.panel .line { display: inline-block; width: 18px; height: 4px; margin-right: 6px; vertical-align: middle; background: #00c8ff; }
+.panel .dot { display: inline-block; width: 10px; height: 10px; margin: 0 9px 0 3px; border: 1px solid #000; border-radius: 50%; background: #ffe600; vertical-align: middle; }
