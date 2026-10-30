@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Waypoint - MCBS</title>
+  <link rel="icon" type="image/png" href="mcbs.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <style>
+    html, body, #map { height: 100%; margin: 0; }
+    #map { background: #111; }
+    .walk-info { background: #fff; color: #222; padding: 8px 12px; border-radius: 5px; font: 13px/1.5 sans-serif; }
+    .walk-info h2 { margin: 0 0 4px; font-size: 14px; }
+    .walk-info small { color: #555; }
+    .walk-info .steep { color: #d40000; font-weight: bold; }
+    .walk-info h3 { margin: 8px 0 2px; font-size: 13px; }
+    .walk-info .line { display: inline-block; width: 18px; height: 4px; margin-right: 6px; vertical-align: middle; }
+    #layer-colors { display: block; max-width: 240px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="m20.js"></script>
+  <script src="walk.js"></script>
+  <script>
+    // Mars tiles use plain lat/lon, not the Web Mercator projection Earth maps use.
+    const map = L.map('map', { crs: L.CRS.EPSG4326, minZoom: 1, maxZoom: 18 })
+      .setView([18.44, 77.45], 11); // Jezero Crater
+
+    // CTX tiles are 512px and their zoom levels start one lower than Leaflet's.
+    const ctx = L.tileLayer('https://astro.arcgis.com/arcgis/rest/services/OnMars/CTX1/MapServer/tile/{z}/{y}/{x}', {
+      tileSize: 512,
+      zoomOffset: -1,
+      attribution: 'CTX: NASA/JPL/MSSS/The Murray Lab, hosted by Esri'
+    }).addTo(map);
+
+    // maxNativeZoom: deepest level Trek has tiles for. Past it, Leaflet stretches those tiles.
+    const trek = 'https://trek.nasa.gov/tiles/Mars/EQ/';
+    const mola = L.tileLayer(trek + 'Mars_MGS_MOLA_ClrShade_merge_global_463m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg', {
+      maxNativeZoom: 7,
+      attribution: 'MOLA: NASA/JPL/GSFC, via NASA Mars Trek'
+    });
+    const themis = L.tileLayer(trek + 'THEMIS_DayIR_ControlledMosaics_100m_v2_oct2018/1.0.0/default/default028mm/{z}/{y}/{x}.png', {
+      maxNativeZoom: 9,
+      attribution: 'THEMIS: NASA/JPL/ASU, via NASA Mars Trek'
+    });
+
+    // Leaflet wants [lat, lon]; the rover data stores lon first.
+    const roverPath = L.polyline(M20.map(([lon, lat]) => [lat, lon]), {
+      color: '#ff7a00',
+      weight: 3,
+      attribution: 'Rover path: NASA/JPL-Caltech'
+    }).addTo(map);
+
+    const toLatLon = ([lon, lat]) => [lat, lon];
+    const walkStops = M20.slice(WALK_FIRST_STOP, WALK_LAST_STOP + 1);
+    const stats = walkStats(walkStops);
+    const walkRoute = L.layerGroup([
+      L.polyline(walkStops.map(toLatLon), { color: '#00c8ff', weight: 6 }),
+      L.polyline(stats.steepParts.map(part => part.map(toLatLon)), { color: '#ff0000', weight: 6 })
+    ]).addTo(map);
+
+    L.control.layers({
+      'CTX photos': ctx,
+      'MOLA height colors': mola,
+      'THEMIS infrared': themis
+    }, { 'Perseverance path': roverPath, 'Marswalk route': walkRoute }, { collapsed: false }).addTo(map);
+
+    const LAYER_COLORS = {
+      'CTX photos': 'Map: a black-and-white photo of the ground.',
+      'MOLA height colors': 'Map: blue = lower, green = middle, yellow = higher. Black and white spots = shadows and sunlit slopes.',
+      'THEMIS infrared': 'Map: bright = warmer ground, dark = colder ground (daytime).'
+    };
+
+    const walkInfo = L.control({ position: 'bottomleft' });
+    walkInfo.onAdd = () => {
+      const box = L.DomUtil.create('div', 'walk-info');
+      box.innerHTML = `
+        <h2>Marswalk route</h2>
+        Distance: ${(stats.distanceM / 1000).toFixed(1)} km<br>
+        Highest point: ${Math.round(stats.highestM)} m<br>
+        Lowest point: ${Math.round(stats.lowestM)} m<br>
+        Total climb: ${Math.round(stats.climbM)} m<br>
+        <span class="steep">Steep parts: ${Math.round(stats.steepM)} m</span><br>
+        <small>Heights are relative to Mars's average level.</small>
+        <h3>Color guide</h3>
+        <span class="line" style="background: #ff7a00"></span>Rover's full path<br>
+        <span class="line" style="background: #00c8ff"></span>Marswalk route<br>
+        <span class="line" style="background: #ff0000"></span>Steep: ${STEEP_DEGREES}&deg; or more between stops<br>
+        <small id="layer-colors">${LAYER_COLORS['CTX photos']}</small>`;
+      return box;
+    };
+    walkInfo.addTo(map);
+
+    map.on('baselayerchange', e => {
+      document.getElementById('layer-colors').textContent = LAYER_COLORS[e.name];
+    });
+  </script>
+</body>
+</html>
