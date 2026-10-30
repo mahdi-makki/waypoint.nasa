@@ -132,6 +132,7 @@
       const box = L.DomUtil.create('div', 'walk-info');
       box.innerHTML = `
         <h2>Marswalk route</h2>
+        <a href="view3d.html">Open 3D view</a><br>
         Distance: ${(stats.distanceM / 1000).toFixed(1)} km<br>
         Highest point: ${Math.round(stats.highestM)} m<br>
         Lowest point: ${Math.round(stats.lowestM)} m<br>
