@@ -3,6 +3,8 @@ const WALK_FIRST_STOP = 154;
 const WALK_LAST_STOP = 260;
 
 const MARS_RADIUS_M = 3389500;
+// A rover staying this many sols (Mars days) or longer usually means science, though not always.
+const SCIENCE_STAY_SOLS = 15;
 
 function distanceM([lon1, lat1], [lon2, lat2]) {
   const rad = Math.PI / 180;
@@ -25,4 +27,10 @@ function walkStats(stops) {
     stats.climbM += Math.max(heights[i] - heights[i - 1], 0);
   }
   return stats;
+}
+
+function scienceStops(stops) {
+  return stops.slice(0, -1)
+    .map((stop, i) => ({ stop, fromSol: stop[3], toSol: stops[i + 1][3] }))
+    .filter(({ fromSol, toSol }) => toSol - fromSol >= SCIENCE_STAY_SOLS);
 }
