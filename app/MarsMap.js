@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { formatHours, marsClock } from '../lib/clock';
@@ -31,7 +32,7 @@ const photoHtml = ({ sol, camera, thumb, page }) => `
 // Builds the map inside the element and returns a function that removes it again.
 function createMap(L, element) {
   // Mars tiles use plain lat/lon, not the Web Mercator projection Earth maps use.
-  const map = L.map(element, { crs: L.CRS.EPSG4326, minZoom: 1, maxZoom: 18 })
+  const map = L.map(element, { crs: L.CRS.EPSG4326, minZoom: 1, maxZoom: 18, attributionControl: false })
     .setView([18.44, 77.45], 11); // Jezero Crater
 
   // CTX tiles are 512px and their zoom levels start one lower than Leaflet's.
@@ -112,7 +113,6 @@ function createMap(L, element) {
     const box = L.DomUtil.create('div', 'walk-info');
     box.innerHTML = `
       <h2>Marswalk route</h2>
-      <a href="/view3d">Open 3D view</a><br>
       Distance: ${(stats.distanceM / 1000).toFixed(1)} km<br>
       Highest point: ${Math.round(stats.highestM)} m<br>
       Lowest point: ${Math.round(stats.lowestM)} m<br>
@@ -174,5 +174,10 @@ export default function MarsMap() {
     };
   }, []);
 
-  return <div id="map" ref={element} />;
+  return (
+    <>
+      <div id="map" ref={element} />
+      <Link className="view-switch" href="/view3d">Open 3D view</Link>
+    </>
+  );
 }

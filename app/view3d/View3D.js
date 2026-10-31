@@ -143,7 +143,6 @@ export default function View3D() {
       <div ref={element} />
       <div className="panel">
         <h1>Marswalk in 3D</h1>
-        <Link href="/">Back to the map</Link><br />
         <span className="line"></span>Marswalk route<br />
         <span className="dot"></span>Science stop
         <label htmlFor="stretch">Height stretch: {stretch}x</label>
@@ -151,6 +150,7 @@ export default function View3D() {
         <small>Drag to turn, scroll to zoom, right-drag to move. Starts looking north.</small>
         <small>Terrain and photo: HiRISE, NASA/JPL/University of Arizona.</small>
       </div>
+      <Link className="view-switch" href="/">Back to the map</Link>
     </>
   );
 }
