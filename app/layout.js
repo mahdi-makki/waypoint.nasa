@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Waypoint - NASA',
+  title: 'X-Terrestrial NASA',
   icons: { icon: '/mcbs.png' }
 };
 
