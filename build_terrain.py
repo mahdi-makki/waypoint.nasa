@@ -196,6 +196,17 @@ def build_3d_view():
           f'grid vs rover: median {np.median(diff):.1f} m, scatter {diff.std():.2f} m')
 
 
+def photo_outline(has_data, bounds):
+    """[lat, lon] corners of where the photo has data. Its side edge slants, so its bounds rectangle won't do."""
+    (south, west), (north, east) = bounds
+    height, width = has_data.shape
+    top = np.flatnonzero(has_data[0])
+    bottom = np.flatnonzero(has_data[-1])
+    corners = [(0, top[0]), (0, top[-1] + 1), (height, bottom[-1] + 1), (height, bottom[0])]
+    return [[north - float(row) / height * (north - south), west + float(col) / width * (east - west)]
+            for row, col in corners]
+
+
 def build_photo():
     with rasterio.open(HERE / 'data' / 'hirise_ortho.tif') as src:
         window = area_window(src, walk, HIRISE_MARGIN_M, HIRISE_SHIFT)
@@ -206,7 +217,8 @@ def build_photo():
         Image.merge('LA', (Image.fromarray(grey), Image.fromarray(alpha))).save(
             HERE / 'public' / 'hirise_walk.webp', quality=75, method=6)
         print(f'hirise_walk.webp: {grey.shape[1]}x{grey.shape[0]} px, {has_data.mean():.0%} has data')
-        return map_bounds(src, window, HIRISE_SHIFT)
+        bounds = map_bounds(src, window, HIRISE_SHIFT)
+        return bounds, photo_outline(has_data, bounds)
 
 
 def build_hirise_slopes():
@@ -265,11 +277,11 @@ def build_ctx_slopes(hirise_grid, hirise_has_data):
 
 
 if __name__ == '__main__':
-    photo_bounds = build_photo()
+    photo_bounds, photo_edge = build_photo()
     hirise_slope_bounds, hirise_grid, hirise_has_data, walk_stats = build_hirise_slopes()
     ctx_slope_bounds = build_ctx_slopes(hirise_grid, hirise_has_data)
     terrain = {
-        'hiriseWalk': {'url': 'hirise_walk.webp', 'bounds': photo_bounds},
+        'hiriseWalk': {'url': 'hirise_walk.webp', 'bounds': photo_bounds, 'outline': photo_edge},
         'slopeHirise': {'url': 'slope_hirise.png', 'bounds': hirise_slope_bounds},
         'slopeCtx': {'url': 'slope_ctx.png', 'bounds': ctx_slope_bounds},
         'slopeBands': SLOPE_BANDS,

@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 
-from build_terrain import EAST_SCALE, NO_HEIGHT, clean_heights, encode_heights, slope_degrees, slope_image, steep_runs
+from build_terrain import EAST_SCALE, NO_HEIGHT, clean_heights, encode_heights, photo_outline, slope_degrees, slope_image, steep_runs
 
 PIXEL_M = 3
 rows, cols = np.indices((50, 50))
@@ -45,5 +45,9 @@ assert np.isnan(cleaned[0]) and cleaned[1] == -2500 and np.isnan(cleaned[2]), 'n
 # 3D data: tenths of a meter above the base height, with a marker for missing heights.
 decoded = np.frombuffer(base64.b64decode(encode_heights(np.array([-2500.0, -2487.25, np.nan]), -2500.0)), dtype='<i2')
 assert decoded[0] == 0 and decoded[1] == 128 and decoded[2] == NO_HEIGHT, '3D height encoding'
+
+# Outline: follows a slanted left edge, in [lat, lon], clockwise from the top left.
+slanted = np.array([[False, True, True, True], [False, False, True, True]])
+assert photo_outline(slanted, [[10, 20], [12, 24]]) == [[12, 21], [12, 24], [10, 24], [10, 22]], 'photo outline'
 
 print('terrain tests passed')

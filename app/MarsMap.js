@@ -55,10 +55,13 @@ function createMap(L, element) {
 
   // Its own pane keeps the photo above the map layers but under the route lines.
   map.createPane('hirise').style.zIndex = 350;
-  const hirise = L.imageOverlay(TERRAIN.hiriseWalk.url, TERRAIN.hiriseWalk.bounds, {
-    pane: 'hirise',
-    attribution: 'HiRISE: NASA/JPL/University of Arizona'
-  }).addTo(map);
+  const hirise = L.layerGroup([
+    L.imageOverlay(TERRAIN.hiriseWalk.url, TERRAIN.hiriseWalk.bounds, {
+      pane: 'hirise',
+      attribution: 'HiRISE: NASA/JPL/University of Arizona'
+    }),
+    L.polygon(TERRAIN.hiriseWalk.outline, { color: '#fff', weight: 2, dashArray: '8 6', fill: false, interactive: false })
+  ]).addTo(map);
 
   // Above the photos, under the route lines. HiRISE detail near the walk, CTX for the wider area.
   map.createPane('slopes').style.zIndex = 360;
@@ -124,7 +127,7 @@ function createMap(L, element) {
       <span class="dot"></span>Science stop: rover stayed ${SCIENCE_STAY_SOLS}+ sols<br>
       ${TERRAIN.slopeBands.map(([from, to, color]) => `<span class="line" style="height: 10px; background: rgb(${color})"></span>Ground ${to ? `${from}-${to}` : `${from}+`}&deg;<br>`).join('')}
       <small id="layer-colors">${LAYER_COLORS['CTX photos']}</small>
-      <small>Sharp patch around the walk: HiRISE photo. Untick it to see the layer underneath.</small>`;
+      <small>White dashed line: edge of the sharp HiRISE photo around the walk. Untick it to see the layer underneath.</small>`;
     return box;
   };
   walkInfo.addTo(map);
