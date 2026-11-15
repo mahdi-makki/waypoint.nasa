@@ -2,7 +2,7 @@ import './globals.css';
 
 export const metadata = {
   title: 'X-Terrestrial NASA',
-  icons: { icon: '/mcbs.png' }
+  icons: { icon: '/nasa.png' }
 };
 
 export default function RootLayout({ children }) {
